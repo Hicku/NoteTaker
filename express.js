@@ -1,51 +1,51 @@
 const express = require("express");
-const fs = require("fs");
 const path = require("path");
-const uuid = require("uuid");
-
-
+const { v4: uuid } = require("uuid");
+const low = require('lowdb')
+const FileSync = require("lowdb/adapters/FileSync");
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 
-app.use(express.urlencoded({ extended: true })); // Middleware to parse URL-encoded data with querystring library
-app.use(express.json()); // Middleware to parse incoming JSON data
-app.use(express.static("public")); // Middleware to serve static files from the "public" directory
+// initialize lowdb
+const adapter = new FileSync("db.json");
+const db = low(adapter);
+db.defaults({ notes: [] }).write();
 
-// Route to  notes page
-app.get("/notes", function(req, res) {
-    res.sendFile(path.join(__dirname, "/public/notes.html"));
-  });
-  
-  // Route to home page
-  app.get("*", function(req, res) {
-    res.sendFile(path.join(__dirname, "/public/index.html"));
-  });
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static("public"));
 
-  app.post("/api/notes", function(req, res) {
-    const newNote = req.body;
-    newNote.id = uuid.v4();
-    fs.readFile("./db/db.json", "utf8", function(err, data) {
-      if (err) {
-        console.log(err);
-      } else {
-        const notes = JSON.parse(data);
-        notes.push(newNote);
-        fs.writeFile("./db/db.json", JSON.stringify(notes), function(err) {
-          if (err) {
-            console.log(err);
-          } else {
-            res.json(newNote);
-          }
-        });
-      }
-    });
-  });
-  
+// loads notes.html
+app.get("/notes", (req, res) =>
+  res.sendFile(path.join(__dirname, "/public/views/notes.html"))
+);
 
+// get all notes
+app.get("/api/notes", (req, res) => {
+  const notes = db.get("notes").value();
+  res.json(notes);
+});
 
+// save note
+app.post("/api/notes", (req, res) => {
+  const note = { ...req.body, id: uuid() };
+  db.get("notes").push(note).write();
+  res.json(note);
+});
 
+// delete note
+app.delete("/api/notes/:id", (req, res) => {
+  const id = req.params.id;
+  db.get("notes").remove({ id }).write();
+  res.send(id);
+});
 
+// Other routes to homepage
+app.get("*", (req, res) =>
+  res.sendFile(path.join(__dirname, "/public/views/index.html"))
+);
 
-app.listen (3000, () => {
-    console.log("Listening on port 3000")
-})
+app.listen(PORT, () =>
+  console.log(`Serving static asset routes on port ${PORT}!`)
+);
