@@ -21,7 +21,7 @@ app.get("/notes", (req, res) =>
   res.sendFile(path.join(__dirname, "/public/views/notes.html"))
 );
 
-// get all notes
+// All notes
 app.get("/api/notes", (req, res) => {
   const notes = db.get("notes").value();
   res.json(notes);
