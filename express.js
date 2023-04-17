@@ -11,8 +11,15 @@ app.use(express.urlencoded({ extended: true })); // Middleware to parse URL-enco
 app.use(express.json()); // Middleware to parse incoming JSON data
 app.use(express.static("public")); // Middleware to serve static files from the "public" directory
 
-
-
+// Route to  notes page
+app.get("/notes", function(req, res) {
+    res.sendFile(path.join(__dirname, "/public/notes.html"));
+  });
+  
+  // Route to home page
+  app.get("*", function(req, res) {
+    res.sendFile(path.join(__dirname, "/public/index.html"));
+  });
 
 
 
