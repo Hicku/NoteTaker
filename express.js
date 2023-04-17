@@ -21,6 +21,26 @@ app.get("/notes", function(req, res) {
     res.sendFile(path.join(__dirname, "/public/index.html"));
   });
 
+  app.post("/api/notes", function(req, res) {
+    const newNote = req.body;
+    newNote.id = uuid.v4();
+    fs.readFile("./db/db.json", "utf8", function(err, data) {
+      if (err) {
+        console.log(err);
+      } else {
+        const notes = JSON.parse(data);
+        notes.push(newNote);
+        fs.writeFile("./db/db.json", JSON.stringify(notes), function(err) {
+          if (err) {
+            console.log(err);
+          } else {
+            res.json(newNote);
+          }
+        });
+      }
+    });
+  });
+  
 
 
 
